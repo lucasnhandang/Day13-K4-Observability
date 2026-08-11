@@ -1,6 +1,6 @@
-# Template Alert và Runbook
+# Alert Rules và Runbook
 
-Mỗi alert phải dựa trên triệu chứng người dùng hoặc SLO, không dựa trực tiếp vào tên implementation nội bộ.
+Mỗi alert bên dưới dựa trên triệu chứng người dùng hoặc SLO, không dựa trực tiếp vào tên module hay implementation nội bộ. Ngưỡng khớp với `config/slo.yaml` và `config/dashboard.yaml`.
 
 ## Alert 1
 
