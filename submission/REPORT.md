@@ -96,7 +96,7 @@
 | Giáp Hoàng Thịnh | PII scrubbing, thứ tự processor và kiểm chứng dữ liệu nhạy cảm | `cd07ad4`, PR #2 (`8f32ce6`) | PII phải được che trước JSON rendering; validator cần kiểm tra cả payload lồng nhau. |
 | Nguyễn Trần Gia Phụng | Metrics, dashboard contract sáu panel và evidence | `a38a2c8`, PR #4 (`3abedf9`) | Dashboard chỉ hữu ích khi đơn vị, threshold, time range và nguồn dữ liệu nhất quán. |
 | Trần Bá Lợi | SLO, ba alert rule, ba runbook và incident verification | `99093d7`, `8b30d0a`, PR #3 (`47f43bd`) | Alert nên bám triệu chứng/SLO, có thời gian duy trì để hạn chế nhiễu và luôn trỏ tới runbook hành động được. |
-| Nguyễn Trương Ngọc Mai | Điều phối QA, Langfuse prompt/version evidence, challenge investigation và báo cáo | Chưa có commit riêng trong lịch sử Git tại thời điểm báo cáo | Điều tra sự cố cần nối bằng chứng theo thứ tự Metrics -> Trace -> Log -> Root cause, không kết luận chỉ từ một tín hiệu. |
+| Nguyễn Trương Ngọc Mai | Điều phối QA, Langfuse prompt/version evidence, challenge investigation và báo cáo | `9b51925` (`báo cáo nhóm`) | Điều tra sự cố cần nối bằng chứng theo thứ tự Metrics -> Trace -> Log -> Root cause, không kết luận chỉ từ một tín hiệu. |
 
 ## 8. Kiểm tra trước khi nộp
 
