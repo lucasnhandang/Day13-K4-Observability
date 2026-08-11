@@ -1,21 +1,19 @@
 alerts:
-  - name: high_latency_p95
+  - name: HighLatencyP95
     severity: warning
-    condition: "latency_p95_ms > 3000 for 5 minutes"
+    condition: latency_p95_ms > 3000 for 5m
     type: symptom-based
-    owner: on-call-engineer
+    owner: On-call SRE (Loi)
     runbook: docs/alerts.md#alert-1
-
-  - name: error_rate_high
+  - name: ElevatedErrorRate
     severity: critical
-    condition: "error_rate_pct > 2 for 3 minutes"
+    condition: error_rate_pct > 2 for 5m
     type: symptom-based
-    owner: on-call-engineer
+    owner: On-call SRE (Loi)
     runbook: docs/alerts.md#alert-2
-
-  - name: daily_cost_budget
+  - name: CostBudgetBurn
     severity: warning
-    condition: "daily_cost_usd > 2.5 for 1 minute"
+    condition: total_cost_usd_per_window > 2.5 OR cost_rate_per_minute > 2x baseline for 10m
     type: symptom-based
-    owner: team-lead
+    owner: On-call SRE (Loi)
     runbook: docs/alerts.md#alert-3

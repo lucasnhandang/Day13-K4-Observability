@@ -4,50 +4,42 @@ Mỗi alert bên dưới dựa trên triệu chứng người dùng hoặc SLO, 
 
 ## Alert 1
 
-- **Tên:** `high_latency_p95`
-- **Severity:** `warning`
-- **SLI/SLO liên quan:** `latency_p95_ms`; objective P95 ≤ 3000 ms.
-- **Điều kiện và thời gian duy trì:** `latency_p95_ms > 3000 for 5 minutes`.
-- **Ảnh hưởng tới người dùng:** ít nhất 5% request có thể mất hơn 3 giây, làm hội thoại phản hồi chậm hoặc người dùng gửi lại request.
-- **Ba bước kiểm tra đầu tiên:**
-  1. Mở panel Latency trong cửa sổ 60 phút, xác nhận P95 vượt 3000 ms liên tục 5 phút và đối chiếu Traffic để loại trừ cửa sổ quá ít mẫu.
-  2. Trong Langfuse, lọc trace cùng khoảng thời gian và tag `lab`; mở một trace chậm, so sánh duration của `run`, `retrieve` và `generate` để khoanh vùng span bất thường.
-  3. Lấy correlation ID của request chậm, tìm trong `data/logs.jsonl`, kiểm tra `latency_ms`, metadata request và trạng thái incident để chứng minh nguyên nhân.
-- **Mitigation tạm thời:** tắt practice incident `rag_slow` nếu đang bật; chuyển sang retrieval fallback hoặc giảm tải/concurrency trong khi điều tra. Không xóa trace hay log chậm.
-- **Owner:** `on-call-engineer`.
+- Tên: High Latency (P95 Response Time)
+- Severity: Warning (nâng lên Critical nếu duy trì liên tục trên 15 phút)
+- SLI/SLO liên quan: `latency_p95_ms` ≤ 3000ms, target 99.5% (config/slo.yaml)
+- Điều kiện và thời gian duy trì: p95 latency (cửa sổ rolling 5 phút) > 3000ms, duy trì liên tục ≥ 5 phút
+- Ảnh hưởng tới người dùng: Chat phản hồi chậm rõ rệt, cảm giác đơ/treo; người dùng có thể bỏ ngang phiên chat
+- Ba bước kiểm tra đầu tiên:
+  1. Xem panel Latency (p50/p95/p99) trên dashboard để xác nhận mức tăng và khoảng thời gian bị ảnh hưởng
+  2. Mở trace mới nhất trong Langfuse ở khoảng thời gian alert nổ ra, xác định span nào (RAG retrieval, LLM call, hay tool call) chiếm phần lớn thời gian
+  3. Lọc log theo `correlation_id` của các request chậm để kiểm tra có kèm lỗi/timeout hay không
+- Mitigation tạm thời: Nếu span RAG retrieval là nguyên nhân, giảm tạm số lượng document retrieve hoặc bật cache; nếu do một dependency cụ thể chậm, fallback tạm thời sang phản hồi rút gọn/không dùng RAG
+- Owner: On-call SRE (Lợi)
 
 ## Alert 2
 
-- **Tên:** `error_rate_high`
-- **Severity:** `critical`
-- **SLI/SLO liên quan:** `error_rate_pct`; objective error rate ≤ 2%.
-- **Điều kiện và thời gian duy trì:** `error_rate_pct > 2 for 3 minutes`.
-- **Ảnh hưởng tới người dùng:** request `/chat` thất bại hoặc trả HTTP 5xx; người dùng không nhận được câu trả lời.
-- **Ba bước kiểm tra đầu tiên:**
-  1. Mở panel Error, xác nhận tỷ lệ lỗi vượt 2% liên tục 3 phút và xem `error_breakdown` để xác định loại lỗi chiếm ưu thế.
-  2. Mở các trace lỗi trong Langfuse cùng khoảng thời gian; tìm span đầu tiên có lỗi và xác định lỗi nằm ở `retrieve`, `generate` hay toàn bộ `run`.
-  3. Dùng correlation ID nối trace với `request_failed` trong `data/logs.jsonl`; kiểm tra `error_type`, health endpoint và trạng thái incident trước khi kết luận root cause.
-- **Mitigation tạm thời:** tắt practice incident `tool_fail` nếu đang bật; bật câu trả lời fallback/degraded mode hoặc rollback thay đổi gần nhất. Giữ nguyên error evidence để điều tra.
-- **Owner:** `on-call-engineer`.
+- Tên: Elevated Error Rate
+- Severity: Critical
+- SLI/SLO liên quan: `error_rate_pct` ≤ 2%, target 99.0% (config/slo.yaml)
+- Điều kiện và thời gian duy trì: error rate (cửa sổ rolling 5 phút) > 2%, duy trì liên tục ≥ 5 phút
+- Ảnh hưởng tới người dùng: Một phần request bị fail hoàn toàn — người dùng nhận lỗi hoặc không có phản hồi
+- Ba bước kiểm tra đầu tiên:
+  1. Xem panel Errors (error_rate_pct và breakdown theo `error_type`) trên dashboard để biết loại lỗi chiếm ưu thế
+  2. Tìm trace tương ứng trong Langfuse, xác định span fail (tool call, LLM call, hay validation)
+  3. Lọc log theo `correlation_id` của các request lỗi để lấy nguyên nhân cụ thể
+- Mitigation tạm thời: Nếu lỗi tập trung ở một tool/dependency, tạm thời disable tool đó hoặc retry với backoff; nếu do input không hợp lệ, trả lỗi rõ ràng (4xx) cho client thay vì lỗi hệ thống (5xx)
+- Owner: On-call SRE (Lợi)
 
 ## Alert 3
 
-- **Tên:** `daily_cost_budget`
-- **Severity:** `warning`
-- **SLI/SLO liên quan:** `daily_cost_usd`; objective tổng cost ≤ 2.5 USD/ngày.
-- **Điều kiện và thời gian duy trì:** `daily_cost_usd > 2.5 for 1 minute`.
-- **Ảnh hưởng tới người dùng:** chưa nhất thiết gây lỗi tức thời, nhưng hệ thống vượt ngân sách và có nguy cơ phải giới hạn hoặc dừng dịch vụ.
-- **Ba bước kiểm tra đầu tiên:**
-  1. Mở panel Cost và Tokens, xác nhận tổng cost vượt 2.5 USD, kiểm tra mức tăng theo phút và xác định input hay output token tăng bất thường.
-  2. Trong Langfuse, nhóm cost/token theo model, feature và prompt version; tìm nhóm đóng góp lớn nhất thay vì chỉ nhìn tổng chi phí.
-  3. Mở các trace có cost cao nhất, kiểm tra `usage_details`, `cost_details`, prompt version và trạng thái incident `cost_spike` để xác định nguồn tăng.
-- **Mitigation tạm thời:** tắt practice incident `cost_spike` nếu đang bật; giới hạn output token, giảm traffic không thiết yếu hoặc rollback prompt/model gây tăng chi phí.
-- **Owner:** `team-lead`.
-
-## Quy tắc vận hành chung
-
-- Acknowledge alert và ghi thời điểm bắt đầu điều tra.
-- Mọi kết luận root cause phải có metric cụ thể, trace ID và log line/correlation ID tương ứng.
-- Sau mitigation, theo dõi ít nhất bằng đúng duration của alert để xác nhận SLI đã trở lại ngưỡng.
-- Ghi fix dài hạn và preventive measure vào `submission/REPORT.md`; không coi việc tắt alert là một mitigation hợp lệ.
-- `quality_score_avg` vẫn được theo dõi trên dashboard. Nhóm chưa tạo paging alert riêng vì đây là quality proxy; cần thêm dữ liệu đánh giá trước khi chọn duration đủ tin cậy.
+- Tên: Cost Budget Burn
+- Severity: Warning
+- SLI/SLO liên quan: `daily_cost_usd` ≤ 2.5, target 100% (config/slo.yaml)
+- Điều kiện và thời gian duy trì: Tổng cost trong time range hiện tại (60 phút) vượt 2.5 USD, hoặc tốc độ cost/phút tăng gấp đôi baseline, duy trì liên tục ≥ 10 phút
+- Ảnh hưởng tới người dùng: Không ảnh hưởng UX ngay lập tức, nhưng rủi ro vượt ngân sách vận hành, có thể dẫn tới việc phải giới hạn/tắt tính năng nếu không xử lý kịp
+- Ba bước kiểm tra đầu tiên:
+  1. Xem panel Cost (sum theo phút) và panel Tokens trên dashboard để xác định tăng do tần suất request hay do token/response dài bất thường
+  2. Mở trace của các request cost cao nhất trong Langfuse, kiểm tra model và tokens_in/tokens_out
+  3. Lọc log theo `feature`/`model` để xác định có phải một feature hoặc model cụ thể đang gây tăng cost
+- Mitigation tạm thời: Giới hạn `max_tokens` hoặc chuyển tạm sang model rẻ hơn cho feature gây spike; áp rate-limit tạm thời nếu nguyên nhân là traffic bất thường
+- Owner: On-call SRE (Lợi)
