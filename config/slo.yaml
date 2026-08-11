@@ -4,13 +4,16 @@ slis:
   latency_p95_ms:
     objective: 3000
     target: 99.5
-    note: Replace with your group's target
+    note: P95 dưới 3 giây giữ trải nghiệm hội thoại đủ nhanh; 99.5% cửa sổ đo phải đạt mục tiêu.
   error_rate_pct:
     objective: 2
     target: 99.0
+    note: Tối đa 2% request thất bại; 99% cửa sổ đo phải đạt mục tiêu.
   daily_cost_usd:
     objective: 2.5
     target: 100.0
+    note: Ngân sách lab tối đa 2.5 USD mỗi ngày và không cho phép vượt ngân sách.
   quality_score_avg:
     objective: 0.75
     target: 95.0
+    note: Điểm quality proxy trung bình tối thiểu 0.75; 95% cửa sổ đo phải đạt mục tiêu.
