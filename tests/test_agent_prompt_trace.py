@@ -48,7 +48,11 @@ def test_agent_links_prompt_version_to_trace_and_generation(monkeypatch) -> None
     )
 
     trace_metadata = client.trace_updates[-1]["metadata"]
+    trace_update = client.trace_updates[-1]
     generation_update = client.generation_updates[-1]
+    assert trace_update["user_id"] != "student-01"
+    assert trace_update["session_id"] == "session-01"
+    assert trace_update["tags"] == ["lab", "qa", "claude-sonnet-4-5"]
     assert trace_metadata == {
         "prompt_name": "day13-chat",
         "prompt_label": "production",
