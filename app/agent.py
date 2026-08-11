@@ -40,6 +40,13 @@ class LabAgent:
         )
         response = self.llm.generate(prompt.text)
         quality_score = self._heuristic_quality(message, response.text, docs)
+        
+        langfuse_client.score_current_trace(
+            name="quality_score",
+            value=quality_score,
+            data_type="NUMERIC",
+        )
+        
         latency_ms = int((time.perf_counter() - started) * 1000)
         cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)
 

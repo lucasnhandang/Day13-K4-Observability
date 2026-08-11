@@ -46,13 +46,13 @@
 
 ## 6. Điều tra challenge
 
-- Challenge ID:
-- Triệu chứng từ metrics:
-- Trace ID liên quan:
-- Log line/correlation ID liên quan:
-- Root cause:
-- Fix action:
-- Preventive measure:
+- Challenge ID: `day13-k4-observability-v1`.
+- Triệu chứng từ metrics: Latency là chỉ số bất thường. 5/5 request của feature `monitoring` có backend latency `2655–2661ms`, vượt ngưỡng `2000ms` của challenge; baseline gần nhất có median khoảng `156ms`, tức latency tăng khoảng 17 lần. Client quan sát `10.66–13.33s` do các request bị xếp hàng khi tác vụ retrieval blocking chạy trong request handler. Cả 5 request đều trả HTTP 200, error rate là `0%`; cost mỗi request khoảng `0.0015–0.0021 USD`, không có dấu hiệu cost spike.
+- Trace ID liên quan: `fd4451c5d2c3297eb986353ecc526fc5`. Trace có tổng latency `2.66s`; span `retrieve` mất `2.50s`, còn span `generate` mất `0.15s`. Retrieval chiếm khoảng 94% thời gian xử lý và là vị trí cần ưu tiên điều tra.
+- Log line/correlation ID liên quan: `data/logs.jsonl:191`, correlation ID `req-33cbdb46`, session `k4-challenge-s02`. Event `response_sent` ghi nhận `latency_ms=2658`, `cost_usd=0.001749`, `quality_score=0.9` và không có event `request_failed`.
+- Root cause: RAG retrieval/vector-store dependency phản hồi chậm khoảng `2.5s`, làm tăng latency của toàn bộ request. Trong implementation hiện tại, thao tác blocking trong retrieval được thực hiện trực tiếp trên đường xử lý của route async, nên khi có nhiều request đồng thời các request tiếp theo bị xếp hàng và client latency tăng cao.
+- Fix action: Trong production, đặt timeout cứng cho retrieval và chuyển sang fallback response/cache khi vector store chậm; thực hiện retrieval bằng async I/O hoặc worker thread để không block event loop; đồng thời giới hạn số document/top-k khi hệ thống đang quá tải.
+- Preventive measure: Duy trì alert `HighLatencyP95` khi P95 vượt `3000ms` trong 5 phút; bổ sung dashboard riêng cho latency của span `retrieve` và theo dõi queue/event-loop blocking; propagate correlation ID vào trace metadata để nối Metrics → Trace → Log; chạy load test định kỳ với concurrency thực tế và kiểm thử timeout, cache, circuit breaker của retrieval dependency.
 
 ## 7. Đóng góp cá nhân
 

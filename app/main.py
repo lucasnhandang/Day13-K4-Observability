@@ -48,7 +48,7 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
     bind_contextvars(user_id_hash=hash_user_id(body.user_id), 
                      session_id=body.session_id, 
                      feature=body.feature, 
-                     model="gpt-4o-mini", 
+                     model="claude-sonnet-4-5", 
                      env=os.getenv("APP_ENV", "dev"))
     
     log.info(

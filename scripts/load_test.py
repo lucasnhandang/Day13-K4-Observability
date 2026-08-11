@@ -19,14 +19,29 @@ QUERIES = Path("data/sample_queries.jsonl")
 
 
 def send_request(client: httpx.Client, payload: dict) -> None:
-    try:
-        start = time.perf_counter()
-        r = client.post(f"{BASE_URL}/chat", json=payload)
-        latency = (time.perf_counter() - start) * 1000
-        print(f"[{r.status_code}] {r.json().get('correlation_id')} | {payload['feature']} | {latency:.1f}ms")
-    except Exception as e:
-        print(f"Error: {e}")
+    start = time.perf_counter()
 
+    try:
+        response = client.post(f"{BASE_URL}/chat", json=payload)
+        latency = (time.perf_counter() - start) * 1000
+
+        try:
+            data = response.json()
+        except ValueError:
+            data = {}
+
+        cid = (
+            response.headers.get("x-request-id")
+            or data.get("correlation_id")
+            or "-"
+        )
+        feature = payload.get("feature", "-")
+
+        print(f"[{response.status_code}] {cid} | {feature} | {latency:.1f}ms")
+
+    except httpx.RequestError as exc:
+        latency = (time.perf_counter() - start) * 1000
+        print(f"[NETWORK ERROR] {exc} | {latency:.1f}ms")
 
 def main() -> None:
     configure_utf8_stdio()
