@@ -4,13 +4,16 @@ slis:
   latency_p95_ms:
     objective: 3000
     target: 99.5
-    note: Replace with your group's target
+    note: Chat la tuong tac thoi gian thuc; p95 > 3s bi cam nhan la treo/loi. 99.5% giu bien do cho cac request co RAG retrieval cham bat thuong.
   error_rate_pct:
     objective: 2
     target: 99.0
+    note: Pipeline phu thuoc RAG/tool ben ngoai nen chap nhan mot ty le loi thoang qua nho; qua 2% nghia la nguoi dung that su khong nhan duoc phan hoi.
   daily_cost_usd:
     objective: 2.5
     target: 100.0
+    note: Ngan sach demo/lab cho moi khung thoi gian theo doi (khop voi threshold total cost tren dashboard) de tranh chi phi vuot kiem soat khi test/incident.
   quality_score_avg:
     objective: 0.75
     target: 95.0
+    note: Nguong toi thieu de cau tra loi con huu ich; cho phep mot phan nho request bi giam chat luong do fallback/loi tam thoi.
